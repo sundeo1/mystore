@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using mystore.Data.Interfaces;
 using mystore.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
+using mystore.Data;
 
 namespace mystore
 {
@@ -32,6 +33,7 @@ namespace mystore
             services.AddTransient<IProductRepository, ProductRepository>(); //Adding inteface services
             services.AddTransient<ICategoryRepository, CategoryRepository>(); //Adding inteface services
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+            services.AddMvc(options => options.EnableEndpointRouting = false);
             services.AddDbContext<Data.ApplicationDbContext>(options =>
             options.UseMySql(Configuration.GetConnectionString("DevConnection")));
             services.AddIdentity<IdentityUser, IdentityRole>()
@@ -47,10 +49,20 @@ namespace mystore
             }
             app.UseStatusCodePages();
             app.UseStaticFiles();
-            app.UseMvcWithDefaultRoute();
-            
+            app.UseMvc(routes =>
+            {
+                routes.MapRoute(
+                   name: "areas",
+                   template: "{area:exists}/{controller=Products}/{action=Index}/{id?}");
 
-            
+                routes.MapRoute(
+                    name: "default",
+                    template: "{controller=Home}/{action=List}/{Id?}");
+            });
+            //DbInitializer.Seed(app); //No longer needed. Was only used to seed data into db
+
+
+
         }
     }
 }

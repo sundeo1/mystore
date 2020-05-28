@@ -1,0 +1,21 @@
+﻿
+@*
+    For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+*@
+
+
+
+<div>
+    <h2>All products are shown here;</h2>
+</div>
+
+<h2>@Model.CurrentCategory</h2>
+@{ 
+    foreach (var product in Model.Products)
+    { 
+        <div>
+            <h4>Product Name: @product.Name</h4>
+            <p>Price: @product.Price.ToString("C")</p>
+        </div>
+    }
+}
