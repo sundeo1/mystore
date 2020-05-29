@@ -4,17 +4,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using mystore.Data.Interfaces;
 using mystore.Data.Repositories;
-using Microsoft.EntityFrameworkCore;
-using mystore.Data;
 
 namespace mystore
 {
@@ -26,16 +24,16 @@ namespace mystore
         }
 
         public IConfiguration Configuration { get; }
+
         // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddControllersWithViews();
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
             services.AddTransient<IProductRepository, ProductRepository>(); //Adding inteface services
             services.AddTransient<ICategoryRepository, CategoryRepository>(); //Adding inteface services
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
-            services.AddMvc(options => options.EnableEndpointRouting = false);
             services.AddDbContext<Data.ApplicationDbContext>(options =>
-            options.UseMySql(Configuration.GetConnectionString("DevConnection")));
+            options.UseMySQL(Configuration.GetConnectionString("DevConnection")));
             services.AddIdentity<IdentityUser, IdentityRole>()
                 .AddEntityFrameworkStores<Data.ApplicationDbContext>();
         }
@@ -47,22 +45,25 @@ namespace mystore
             {
                 app.UseDeveloperExceptionPage();
             }
-            app.UseStatusCodePages();
-            app.UseStaticFiles();
-            app.UseMvc(routes =>
+            else
             {
-                routes.MapRoute(
-                   name: "areas",
-                   template: "{area:exists}/{controller=Products}/{action=Index}/{id?}");
+                app.UseExceptionHandler("/Home/Error");
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseHsts();
+            }
+            app.UseHttpsRedirection();
+            app.UseStaticFiles();
 
-                routes.MapRoute(
+            app.UseRouting();
+
+            app.UseAuthorization();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllerRoute(
                     name: "default",
-                    template: "{controller=Home}/{action=List}/{Id?}");
+                    pattern: "{controller=Products}/{action=Index}/{id?}");
             });
-            //DbInitializer.Seed(app); //No longer needed. Was only used to seed data into db
-
-
-
         }
     }
 }
